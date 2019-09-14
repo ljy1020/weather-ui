@@ -12,12 +12,19 @@ module.exports = {
     assetsPublicPath: '/',
     proxyTable: {
       '/api': {  //使用"/api"来代替"http://v.juhe.cn/toutiao/index"
-        target: 'http://istimeless.com/weather-info/weatherLive', //源地址
+        target: 'http://istimeless.com', //源地址
         changeOrigin: true, //改变源
         pathRewrite: {
           '^/api': '' //路径重写
         }
-      }
+      }/*,
+      '/searchcityweather': {  //使用"/api"来代替"http://v.juhe.cn/toutiao/index"
+        target: 'http://istimeless.com/weather-city/getCityInfo?cityName=雨花台', //源地址
+        changeOrigin: true, //改变源
+        pathRewrite: {
+          '^/searchcityweather': '' //路径重写
+        }
+      }*/
 
     },
 
