@@ -2,27 +2,29 @@
   <div class="bodyBox">
     <div class="container">
       <!--搜索-->
-      <div class="searchBox">
-      </div>
       <div class="location">
         <span class="el-icon-location-outline"></span>
-        <em>{{weatherData.city}},{{weatherData.province}} </em>
+        <em v-show="!showSearch">{{weatherData.city}},{{weatherData.province}} </em>
         <span class="el-icon-search" @click="showSearch = true"></span>
         <span v-show="showSearch">
-        <input type="text" class="searchInput" v-model="searchCityName"
-               @input="searchCity(searchCityName)">
-        <span class="el-icon-close" @click="showSearch = false"></span>
-        <el-card class="box-card searchContent"  v-show="searchContent">
-          <div v-for="con in searchContent"  class="text item">
-           <span @click="getCityWeather(con.adcode)">{{con.name}}</span>
-          </div>
-      </el-card>
-      </span>
+          <input type="text" class="searchInput" v-model="searchCityName"
+                 @input="searchCity(searchCityName)">
+          <span class="el-icon-close" @click="showSearch = false"></span>
+          <el-card class="box-card searchContent"  v-show="searchContent">
+            <div v-for="con in searchContent"  class="text item">
+             <span @click="showSearch = false;getCityWeather(con.adcode)">{{con.name}}</span>
+            </div>
+          </el-card>
+        </span>
 
       </div>
-      <div>
-        <span>{{weatherData.temperature}}</span>
-        <span>{{weatherData.weather}}</span>
+      <!--温度 天气-->
+      <div class="po_r">
+        <span class="font_120 weatherCode">{{weatherData.temperature}}</span>
+        <span>
+          <img :src="weatherData.weatherImageUrl" alt="">
+        </span>
+        <span class="font_20">{{weatherData.weather}}</span>
       </div>
       <div>
         <span>湿度 {{weatherData.humidity}}</span>
@@ -32,12 +34,17 @@
       <!--预报天气-->
       <div class="forebox">
         <table>
+          <tr>
+            <th>预报</th>
+          </tr>
           <tr v-for="data in foreWeatherData">
             <td>{{data.date}}</td>
-            <td>{{data.dayweather}}</td>
+            <td>
+              <span><img :src="data.weatherImageUrl" alt="">{{data.dayweather}}</span>
+            </td>
             <td>{{data.nighttemp}}/{{data.daytemp}}</td>
             <td>{{data.daywind}}风</td>
-            <td>{{data.nightpower}}级</td>
+            <td>{{data.daypower}}级</td>
           </tr>
         </table>
       </div>
@@ -52,6 +59,7 @@
         name: "FirstPage",
         data(){
           return {
+            weatherImage : null,
             dialogVisible: false,
             weatherData :{},
             searchCityName : "",
@@ -61,17 +69,41 @@
           }
         },
       mounted:function(){
+        this.initWeatherImage();
         this.getCityWeather(null);
       },
       methods:{
-      /*  handleClose(done) {
-          this.$confirm('确认关闭？')
-            .then(_ => {
-              done();
-            })
-            .catch(_ => {});
-         },*/
+        initWeatherImage(){
+            this.weatherImage = new Map();
+            this.weatherImage.set("晴","w0.png");
+            this.weatherImage.set("阴","w2.png");
+            this.weatherImage.set("多云","w1.png");
+            this.weatherImage.set("中雨","w7.png");
+            this.weatherImage.set("大雨","w8.png");
+          },
         getCityWeather(adcode){
+            this.test = {"url":require('../assets/images/weather/w1.png')};
+            //test:
+            /*this.weatherData = {
+                "province" :
+                "北京",
+                "city" :
+                "东城区",
+                "adcode" :
+                "110101",
+                "weather" :
+                "晴",
+                "temperature" :
+                "24",
+                "winddirection" :
+                "西南",
+                "windpower" :
+                "≤3",
+                "humidity" :
+                "56",
+                "reporttime" :
+                "2019-09-15 19:20:52"
+            };*/
           //当天天气
           let getLiveUrl = "/api/weather-info/weatherLive";
           let getForeUrl = "/api/weather-info/weatherForecast";
@@ -86,8 +118,11 @@
               let res = result.data;
               if('1' == res.code){
                 this.weatherData = res.data;
+                let tempWeath = this.weatherData.weather;
+                let temp = {};
+                temp = {"weatherImageUrl":require('../assets/images/weather/'+this.weatherImage.get(tempWeath))};
+                Object.assign(this.weatherData,temp);
               }else{
-                //this.dialogVisible = true;
                 this.$alert('网络出错，请稍后重试！', '提示', {
                   confirmButtonText: '确定'
                 });
@@ -95,7 +130,6 @@
 
              })
             .catch(function (error) { // 请求失败处理
-              //this.dialogVisible = true;
               this.$alert('网络出错，请稍后重试！', '提示', {
                 confirmButtonText: '确定'
               });
@@ -108,6 +142,13 @@
               let res = result.data;
               if('1' == res.code){
                 this.foreWeatherData = res.data.casts;
+                for (var i = 0; i< this.foreWeatherData.length ;i++ ){
+                      let tempWeath = this.foreWeatherData[i].dayweather;
+                      let temp = {};
+                      temp = {"weatherImageUrl":require('../assets/images/weather/'+this.weatherImage.get(tempWeath))};
+                      Object.assign(this.foreWeatherData[i],temp);
+                }
+
               }else{
                 this.$alert('网络出错，请稍后重试！', '提示', {
                   confirmButtonText: '确定'
@@ -168,18 +209,16 @@
     padding: 10px 20px;
     color: white;
   }
-  .searchBox{
+  /*.searchBox{
     width: 60%;
     position: relative;
     margin: 0 auto;
-  }
+  }*/
   .searchContent{
     position: absolute;
-    top: 50px;
-    left : 420px;
-/*
-    background-color: aliceblue;
-*/
+    top: 36px;
+    left : 500px;
+    z-index: 100;
     background:  rgba(0, 0, 0, .3);
     border:none;
     color: white;
@@ -209,7 +248,24 @@
     font-size: 14px;
     color: #fff;
   }
-  /**/
+  /*温度天气*/
+  .po_r{
+    position: relative;
+  }
+  .weatherCode:after{
+    font-size: 48px;
+    position: absolute;
+    content: "°";
+    top: 20px;
+  }
+  .font_120{
+    font-size: 140px;
+  }
+  .font_20{
+    font-size: 20px;
+    font-weight: bold;
+  }
+  /*天气预报*/
   .forebox{
     background:  rgba(0, 0, 0, .3);
     border:none;
@@ -220,9 +276,17 @@
   .forebox table{
     width: 100%;
   }
+  .forebox table tr{
+    line-height: 40px;
+  }
   .forebox td{
     width: 20%;
     text-align: center;
+  }
+  .forebox img{
+    width: 30px;
+    vertical-align: middle;
+    float: left;
   }
 </style>
 
